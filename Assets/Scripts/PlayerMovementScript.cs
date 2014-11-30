@@ -19,11 +19,10 @@ public class PlayerMovementScript : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void FixedUpdate () {
 		if(Input.touchCount == 1)
 		{
-			anim.SetBool ("Hiding", false);
-			anim.SetBool ("Moving", true);
+			anim.SetTrigger("Moving");
 			Touch touch = Input.GetTouch (0);
 			if((touch.position.x / Screen.width) > 0.5f)
 			{
@@ -36,13 +35,11 @@ public class PlayerMovementScript : MonoBehaviour {
 		}
 		else if(Input.touchCount > 1)
 		{
-			anim.SetBool ("Moving", false);
-			anim.SetBool ("Hiding", false);
+			anim.SetTrigger("Moving");
 			StandStill();
 		}
 		else
 		{
-			anim.SetBool ("Moving", false);
 			Interact();
 		}
 	}
@@ -66,12 +63,13 @@ public class PlayerMovementScript : MonoBehaviour {
 	{
 		if(canHide)
 		{
-			anim.SetBool ("Hiding", true);
+			anim.SetTrigger("Hiding");
 			isHidden = true;
 			//GetComponent<SpriteRenderer>().color = new Color(1.0f, 235.0f/255.0f, 4.0f/255.0f, 0.3f);
 		}
 		else
 		{
+			anim.SetTrigger ("Crawling");
 			isHidden = false;
 			//GetComponent<SpriteRenderer>().color = Color.green;
 		}

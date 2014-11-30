@@ -3,45 +3,73 @@ using System.Collections;
 
 public class SpotlightScript : MonoBehaviour {
 
-	public Vector2[] positions;
+	public SpotlightMovement[] positions;
+
+	//public Vector2[] positions;
 	public GameObject player;
 
-	private int nextPositionIndex;
+	private int currentIndex;
 	private Vector2 nextPosition;
+	private int currentSpeed = 0;
+	private int updatesLeft = 0;
+	private float deltaX = 0.0f;
+	private float deltaY = 0.0f;
 
 	// Use this for initialization
 	void Start () {
-		transform.position = positions[0];
-		nextPositionIndex = 1;
-		nextPosition = positions[nextPositionIndex];
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		transform.position = Vector2.Lerp(transform.position, nextPosition, 1.0f * Time.deltaTime);
+		rigidbody2D.MovePosition(positions[0].position);
+		currentIndex = 1;
+		nextPosition = positions[currentIndex].position;
+		updatesLeft = positions[currentIndex].speed;
+		currentSpeed = positions[currentIndex].speed;
 
-		float currentX = transform.position.x;
-		float currentY = transform.position.y;
-		if(currentX + 0.1f >= nextPosition.x && currentX - 0.1f <= nextPosition.x)
+		deltaX = nextPosition.x - positions[0].position.x;
+		deltaY = nextPosition.y - positions[0].position.y;
+	}
+
+	void FixedUpdate () {
+		if(updatesLeft == 0)
 		{
-			if(nextPositionIndex + 1 == positions.Length)
+			if(currentIndex + 1 == positions.Length)
 			{
-				nextPositionIndex = 0;
+				currentIndex = 0;
 			}
 			else
 			{
-				nextPositionIndex++;
+				currentIndex++;
 			}
-			nextPosition = positions[nextPositionIndex];
+			nextPosition = positions[currentIndex].position;
+
+			deltaX = nextPosition.x - rigidbody2D.position.x;
+			deltaY = nextPosition.y - rigidbody2D.position.y;
+
+			updatesLeft = positions[currentIndex].speed;
+			currentSpeed = positions[currentIndex].speed;
 		}
+		Vector2 nextStep = new Vector2(rigidbody2D.position.x + deltaX/currentSpeed, rigidbody2D.position.y + deltaY/currentSpeed);
+
+		rigidbody2D.MovePosition(nextStep);
+
+
+		updatesLeft--;
 	}
 	
 	void OnTriggerStay2D(Collider2D other) 
 	{
-		if(!player.GetComponent<PlayerMovementScript>().isHidden)
+		if(other.gameObject.name == "Player")
 		{
-			Destroy(player);
-			Application.LoadLevel(0);
+			if(!player.GetComponent<PlayerMovementScript>().isHidden)
+			{
+				Destroy(player);
+				Application.LoadLevel(0);
+			}
 		}
 	}
+}
+
+[System.Serializable]
+public class SpotlightMovement
+{
+	public Vector2 position;
+	public int speed;
 }

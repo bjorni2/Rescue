@@ -7,11 +7,13 @@ public class HidingPlaceScript : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D other) 
 	{
-		player.GetComponent<PlayerMovementScript>().canHide = true;
+		if(other.gameObject.name == "Player")
+			player.GetComponent<PlayerMovementScript>().canHide = true;
 	}
 	
 	void OnTriggerExit2D(Collider2D other)
 	{
-		player.GetComponent<PlayerMovementScript>().canHide = false;
+		if(other.gameObject.name == "Player")
+			player.GetComponent<PlayerMovementScript>().canHide = false;
 	}
 }
