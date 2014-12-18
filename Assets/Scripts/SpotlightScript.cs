@@ -4,8 +4,6 @@ using System.Collections;
 public class SpotlightScript : MonoBehaviour {
 
 	public SpotlightMovement[] positions;
-	
-	public GameObject player;
 
 	private int currentIndex;
 	private Vector2 nextDestination;
@@ -16,10 +14,10 @@ public class SpotlightScript : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		rigidbody2D.MovePosition(positions[0].destination);
+		//rigidbody2D.MovePosition(positions[0].destination);
+		transform.position = positions[0].destination;
 		currentIndex = 1;
 		nextDestination = positions[currentIndex].destination;
-		//updatesLeft = positions[currentIndex].speed;
 
 		deltaX = nextDestination.x - positions[0].destination.x;
 		deltaY = nextDestination.y - positions[0].destination.y;
@@ -63,9 +61,9 @@ public class SpotlightScript : MonoBehaviour {
 	{
 		if(other.gameObject.name == "Player")
 		{
-			if(!player.GetComponent<PlayerMovementScript>().isHidden)
+			if(!other.GetComponent<PlayerMovementScript>().isHidden)
 			{
-				Destroy(player);
+				Destroy(other);
 				Application.LoadLevel(0);
 			}
 		}
