@@ -4,27 +4,30 @@ using System.Collections;
 public class SpotlightScript : MonoBehaviour {
 
 	public SpotlightMovement[] positions;
-
-	//public Vector2[] positions;
+	
 	public GameObject player;
 
 	private int currentIndex;
-	private Vector2 nextPosition;
-	private int currentSpeed = 0;
+	private Vector2 nextDestination;
+	private int speed = 0;
 	private int updatesLeft = 0;
 	private float deltaX = 0.0f;
 	private float deltaY = 0.0f;
 
 	// Use this for initialization
 	void Start () {
-		rigidbody2D.MovePosition(positions[0].position);
+		rigidbody2D.MovePosition(positions[0].destination);
 		currentIndex = 1;
-		nextPosition = positions[currentIndex].position;
-		updatesLeft = positions[currentIndex].speed;
-		currentSpeed = positions[currentIndex].speed;
+		nextDestination = positions[currentIndex].destination;
+		//updatesLeft = positions[currentIndex].speed;
 
-		deltaX = nextPosition.x - positions[0].position.x;
-		deltaY = nextPosition.y - positions[0].position.y;
+		deltaX = nextDestination.x - positions[0].destination.x;
+		deltaY = nextDestination.y - positions[0].destination.y;
+
+		float distance = Mathf.Sqrt (deltaX*deltaX + deltaY*deltaY);
+
+		updatesLeft = Mathf.RoundToInt( distance / positions[currentIndex].stepLenght );
+		speed = updatesLeft;
 	}
 
 	void FixedUpdate () {
@@ -38,15 +41,17 @@ public class SpotlightScript : MonoBehaviour {
 			{
 				currentIndex++;
 			}
-			nextPosition = positions[currentIndex].position;
+			nextDestination = positions[currentIndex].destination;
 
-			deltaX = nextPosition.x - rigidbody2D.position.x;
-			deltaY = nextPosition.y - rigidbody2D.position.y;
+			deltaX = nextDestination.x - rigidbody2D.position.x;
+			deltaY = nextDestination.y - rigidbody2D.position.y;
 
-			updatesLeft = positions[currentIndex].speed;
-			currentSpeed = positions[currentIndex].speed;
+			float distance = Mathf.Sqrt (deltaX*deltaX + deltaY*deltaY);
+			
+			updatesLeft = Mathf.RoundToInt( distance / positions[currentIndex].stepLenght );
+			speed = updatesLeft;
 		}
-		Vector2 nextStep = new Vector2(rigidbody2D.position.x + deltaX/currentSpeed, rigidbody2D.position.y + deltaY/currentSpeed);
+		Vector2 nextStep = new Vector2(rigidbody2D.position.x + deltaX/speed, rigidbody2D.position.y + deltaY/speed);
 
 		rigidbody2D.MovePosition(nextStep);
 
@@ -70,6 +75,6 @@ public class SpotlightScript : MonoBehaviour {
 [System.Serializable]
 public class SpotlightMovement
 {
-	public Vector2 position;
-	public int speed;
+	public Vector2 destination;
+	public float stepLenght;
 }
