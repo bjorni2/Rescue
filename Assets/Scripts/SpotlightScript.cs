@@ -7,7 +7,7 @@ public class SpotlightScript : MonoBehaviour {
 
 	private int currentIndex;
 	private Vector2 nextDestination;
-	private int speed = 0;
+	private int nSteps = 0;
 	private int updatesLeft = 0;
 	private float deltaX = 0.0f;
 	private float deltaY = 0.0f;
@@ -25,33 +25,27 @@ public class SpotlightScript : MonoBehaviour {
 		float distance = Mathf.Sqrt (deltaX*deltaX + deltaY*deltaY);
 
 		updatesLeft = Mathf.RoundToInt( distance / positions[currentIndex].stepLenght );
-		speed = updatesLeft;
+		nSteps = updatesLeft;
 	}
 
 	void FixedUpdate () {
 		if(updatesLeft == 0)
 		{
-			if(currentIndex + 1 == positions.Length)
-			{
-				currentIndex = 0;
-			}
-			else
-			{
-				currentIndex++;
-			}
+			currentIndex = (currentIndex + 1) % positions.Length;
+
 			nextDestination = positions[currentIndex].destination;
 
-			deltaX = nextDestination.x - rigidbody2D.position.x;
-			deltaY = nextDestination.y - rigidbody2D.position.y;
+			deltaX = nextDestination.x - GetComponent<Rigidbody2D>().position.x;
+			deltaY = nextDestination.y - GetComponent<Rigidbody2D>().position.y;
 
 			float distance = Mathf.Sqrt (deltaX*deltaX + deltaY*deltaY);
 			
 			updatesLeft = Mathf.RoundToInt( distance / positions[currentIndex].stepLenght );
-			speed = updatesLeft;
+			nSteps = updatesLeft;
 		}
-		Vector2 nextStep = new Vector2(rigidbody2D.position.x + deltaX/speed, rigidbody2D.position.y + deltaY/speed);
+		Vector2 nextStep = new Vector2(GetComponent<Rigidbody2D>().position.x + deltaX/nSteps, GetComponent<Rigidbody2D>().position.y + deltaY/nSteps);
 
-		rigidbody2D.MovePosition(nextStep);
+		GetComponent<Rigidbody2D>().MovePosition(nextStep);
 
 
 		updatesLeft--;
@@ -59,13 +53,25 @@ public class SpotlightScript : MonoBehaviour {
 	
 	void OnTriggerStay2D(Collider2D other) 
 	{
-		if(other.gameObject.name == "Player")
+		/*if(other.gameObject.name == "Player")
 		{
 			if(!other.GetComponent<PlayerMovementScript>().isHidden)
 			{
 				Destroy(other);
 				Application.LoadLevel(0);
 			}
+		}*/
+	}
+
+	void OnTriggerEnter2D(Collider2D other){
+		if(other.gameObject.name == "Player"){
+			other.gameObject.GetComponent<PlayerMovementScript>().nOfSpotlights++;
+		}
+	}
+
+	void OnTriggerExit2D(Collider2D other){
+		if(other.gameObject.name == "Player"){
+			other.gameObject.GetComponent<PlayerMovementScript>().nOfSpotlights--;
 		}
 	}
 }
