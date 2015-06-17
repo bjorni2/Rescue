@@ -12,16 +12,21 @@ public class PlayerMovementScript : MonoBehaviour {
 	private bool LEFT_OR_DOWN = true;
 	private bool RIGHT_OR_UP = false;
 
+
 	private bool shouldMove = false;
 	private bool shouldFreeze = false;
 	private bool moveDirection = false;
 
+	// Current status of player.
 	public bool canHide = false;
 	public bool isHidden = false;
 	public bool isCrawling = false;
+	public bool canClimb = false;
+	public bool isClimbing = false;
+	public bool atTop = false;
+	public bool atBottom = false;
 
 	public float maxSpeed;
-
 	private Animator anim;
 
 	public int nOfSpotlights;
@@ -54,7 +59,7 @@ public class PlayerMovementScript : MonoBehaviour {
 	{
 		if(Input.touchCount == 1)
 		{
-			Debug.Log ("GetTouchInput");
+			//Debug.Log ("GetTouchInput");
 			shouldMove = true;
 
 			Touch touch = Input.GetTouch (0);
@@ -86,7 +91,7 @@ public class PlayerMovementScript : MonoBehaviour {
 
 		if(leftPressed ^ rightPressed)
 		{
-			Debug.Log ("GetEditorInput");
+			//Debug.Log ("GetEditorInput");
 			shouldMove = true;
 
 			if(leftPressed)
@@ -117,27 +122,27 @@ public class PlayerMovementScript : MonoBehaviour {
 			if(Time.time >= nextShot){
 				nextShot = Time.time + shotInterval;
 				GetComponent<AudioSource>().Play();
-				Debug.Log("Shooting\n");
+				//Debug.Log("Shooting\n");
 
 				// Try to make decal appear close to player.
 				Vector3 decPosition;
 				// Place the decal randomly near the player sprite,  
-				decPosition.x = this.transform.position.x - PLAYER_WIDTH + (Random.value * 2 * PLAYER_WIDTH);
-				decPosition.y = this.transform.position.y - PLAYER_HEIGHT + (Random.value * 2 * PLAYER_HEIGHT);
+				decPosition.x = this.transform.position.x - PLAYER_WIDTH + (Random.value * 1.3f * PLAYER_WIDTH);
+				decPosition.y = this.transform.position.y - PLAYER_HEIGHT + (Random.value * 1.3f * PLAYER_HEIGHT);
 				decPosition.z = this.transform.position.z;
 				Decal.transform.position = decPosition;
 				Decal.GetComponent<SpriteRenderer>().enabled = true;
 
 				if(Random.value > MISS_CHANCE)
 				{
-					Debug.Log("Hit\n");
+					//Debug.Log("Hit\n");
 
 					Destroy(this);
 					Application.LoadLevel(0);
 				}
 				else
 				{
-					Debug.Log("Miss\n");
+					//Debug.Log("Miss\n");
 				}
 			}
 		}
@@ -150,12 +155,10 @@ public class PlayerMovementScript : MonoBehaviour {
 	void FixedUpdate () {
 		if(shouldMove)
 		{
-			anim.SetTrigger("Moving");
 			MovePlayer (moveDirection);
 		}
 		else if(shouldFreeze)
 		{
-			anim.SetTrigger("Moving");
 			StandStill();
 		}
 		else
@@ -174,20 +177,86 @@ public class PlayerMovementScript : MonoBehaviour {
 		isHidden = false;
 		if(direction == RIGHT_OR_UP)
 		{
-			GetComponent<Rigidbody2D>().velocity = new Vector2 (maxSpeed, GetComponent<Rigidbody2D>().velocity.y);
+			if(isClimbing)
+			{
+				if(canClimb || atTop)
+				{
+					canClimb = false;
+					isClimbing = false;
+					GetComponent<Rigidbody2D>().gravityScale = 1;
+					anim.SetTrigger("Moving");
+				}
+				else
+				{
+					anim.SetTrigger("Climbing");
+					GetComponent<Rigidbody2D>().velocity = new Vector2 (GetComponent<Rigidbody2D>().velocity.x, maxSpeed);
+				}
+			}
+			else
+			{	
+				anim.SetTrigger("Moving");
+				GetComponent<Rigidbody2D>().velocity = new Vector2 (maxSpeed, GetComponent<Rigidbody2D>().velocity.y);
+			}
 		}
 		else if(direction == LEFT_OR_DOWN)
 		{
-			GetComponent<Rigidbody2D>().velocity = new Vector2 (-maxSpeed, GetComponent<Rigidbody2D>().velocity.y);
+			if(isClimbing)
+			{
+				if(canClimb || atBottom)
+				{
+					canClimb = false;
+					isClimbing = false;
+					GetComponent<Rigidbody2D>().gravityScale = 1;
+					anim.SetTrigger("Moving");
+				}
+				else
+				{
+					anim.SetTrigger("Climbing");
+					GetComponent<Rigidbody2D>().velocity = new Vector2 (GetComponent<Rigidbody2D>().velocity.x, -maxSpeed);
+				}
+			}
+			else
+			{
+				anim.SetTrigger("Moving");
+				GetComponent<Rigidbody2D>().velocity = new Vector2 (-maxSpeed, GetComponent<Rigidbody2D>().velocity.y);
+			}
 		}
 	}
 
+	/* 
+	 * Try to interact with the world
+	 */
 	void Interact ()
 	{
+		// No interaction if we are in a ladder.
+		if(isClimbing){
+			// Unless we have entered another ladder trigger.
+			if(canClimb)
+			{
+				canClimb = false;
+				isClimbing = false;
+				GetComponent<Rigidbody2D>().gravityScale = 1;
+				anim.SetTrigger("Moving");
+			}
+			else
+			{
+				anim.SetTrigger("Climbing");
+				GetComponent<Rigidbody2D>().velocity = new Vector2 (0, 0);
+				GetComponent<Rigidbody2D>().gravityScale = 0;
+			}
+			return;
+		}
+
 		if(canHide)
 		{
 			anim.SetTrigger("Hiding");
 			isHidden = true;
+		}
+		else if(canClimb)
+		{
+			canClimb = false;
+			anim.SetTrigger("Climbing");
+			isClimbing = true;
 		}
 		else
 		{
@@ -205,6 +274,15 @@ public class PlayerMovementScript : MonoBehaviour {
 		if(isCrawling)
 		{
 			enlargeHitbox();
+		}
+
+		if(isClimbing)
+		{
+			anim.SetTrigger("Climbing");
+		}
+		else
+		{
+			anim.SetTrigger("Moving");
 		}
 
 		isHidden = false;
